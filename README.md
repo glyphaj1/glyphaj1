@@ -2,8 +2,6 @@
 
 <h1><b>Hi there, I'm </b><a href="https://github.com/glyphaj">cmd</a> <img src="https://media.giphy.com/media/hvRJCLFzcasrR4ia7z/giphy.gif" width="30"></h1>
 
-<br>
-
 <img src="https://github.com/AnderMendoza/AnderMendoza/raw/main/assets/line-neon.gif" width="100%">
 
 ### 🛠️ Development Environments
@@ -45,5 +43,4 @@
   <img alt="visitors counter" src="https://views-counter.vercel.app/badge?pageId=glyphaj%2FViews-Counter">
   <img src="https://media.tenor.com/sNIbebDwG_EAAAAM/dedsec.gif" width="30">
 </div>
-
-<img src="https://github.com/AnderMendoza/AnderMendoza/raw/main/assets/line-neon.gif" width="100%">
+<img src="https://github.com/AnderMendoza/AnderMendoza/raw/main/assets/line-neon.gif" width="100%">>
