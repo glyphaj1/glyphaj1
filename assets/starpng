@@ -1,4 +1,5 @@
-print ("v 2.0")
+print ("v3.0")
+
 -- [ 
 --      Snowfall . cc UI     
 --  ]
@@ -1647,12 +1648,19 @@ Connections[#Connections + 1] = RunService.RenderStepped:Connect(function(dt)
             local hum = char:FindFirstChildOfClass("Humanoid")
             if hum and hum.Parent and hum.Health > 0 and hum.Health <= ANTI_STOMP_HEALTH then
                 antiStompCooldown = true
-                hum.Health = 0
-                char:BreakJoints()
                 task.spawn(function()
-                    pcall(function() hum:Destroy() end)
-                    pcall(function() char:Destroy() end)
-                    pcall(function() LocalPlayer:LoadCharacter() end)
+                    while task.wait(0.1) do
+                        local c = LocalPlayer.Character
+                        if c and c:FindFirstChildOfClass("Humanoid") and c:FindFirstChildOfClass("Humanoid").Health <= ANTI_STOMP_HEALTH then
+                            for _, part in ipairs(c:GetDescendants()) do
+                                if part:IsA("BasePart") then
+                                    pcall(function() part:Remove() end)
+                                end
+                            end
+                        else
+                            break
+                        end
+                    end
                 end)
                 task.delay(3, function()
                     antiStompCooldown = false
@@ -2501,6 +2509,13 @@ ESPLeft:AddSlider("ESPMaxDist", {
     Min = 50, Max = 5000, Rounding = 0,
     Callback = function(v) ESP_MAX_DISTANCE = v; SetCfg("ESP_MAX_DISTANCE", v) end,
 })
+ESPLeft:AddSlider("ESPInterval", {
+    Text = "ESP Update Interval",
+    Default = ESP_UPDATE_INTERVAL,
+    Min = 0.001, Max = 0.1, Rounding = 3,
+    Tooltip = "Lower number: Better visuals but lower FPS\nHigher number: Worse visuals but higher FPS",
+    Callback = function(v) ESP_UPDATE_INTERVAL = v; SetCfg("ESP_UPDATE_INTERVAL", v) end,
+})
 ESPRight:AddToggle("AimViewToggle", {
     Text = "Aim View",
     Default = ENABLE_AIM_VIEW,
@@ -2525,12 +2540,6 @@ ESPRight:AddLabel("Safe Color"):AddColorPicker("AimViewSafeColor", {
 ESPRight:AddLabel("Danger Color"):AddColorPicker("AimViewDangerColor", {
     Default = AIM_VIEW_DANGER_COLOR,
     Callback = function(v) AIM_VIEW_DANGER_COLOR = v; SetCfg("AIM_VIEW_DANGER_COLOR", v) end,
-})
-ESPRight:AddSlider("ESPInterval", {
-    Text = "Update Interval",
-    Default = ESP_UPDATE_INTERVAL,
-    Min = 0.001, Max = 0.1, Rounding = 3,
-    Callback = function(v) ESP_UPDATE_INTERVAL = v; SetCfg("ESP_UPDATE_INTERVAL", v) end,
 })
 local HvHLeft = Tabs.HvH:AddLeftGroupbox("HvH Features")
 local HvHRight = Tabs.HvH:AddRightGroupbox("Da Hood HvH")
