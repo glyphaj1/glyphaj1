@@ -1,8 +1,9 @@
+print ("v 2.0")
 -- [ 
 --      Snowfall . cc UI     
 --  ]
 
-print ("neu")
+
 local repo = "https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/"
 local Library      = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
@@ -44,7 +45,7 @@ local SHOW_AIM_STATUS_TEXT     = cfgOr(config.SHOW_AIM_STATUS_TEXT,    true)
 local SILENT_AIM_ENABLED       = false
 local TRACER_ENABLED           = cfgOr(config.TRACER_ENABLED,           false)
 local TRACER_COLOR             = config.TRACER_COLOR             or Color3.fromRGB(255, 50, 50)
-local TRACER_THICKNESS         = config.TRACER_THICKNESS         or 1.5
+local TRACER_THICKNESS         = config.TRACER_THICKNESS         or 1
 local SILENT_AIM_KEY           = config.SILENT_AIM_KEY           or "E"
 local SILENT_HIT_CHANCE        = config.SILENT_HIT_CHANCE        or 100
 local SILENT_HIT_PART          = config.SILENT_HIT_PART          or "Head"
@@ -182,23 +183,19 @@ if IS_DAHOOD then
     task.spawn(function()
         AntiDetection:RandomDelay(2, 4)
         if not AntiDetection:IsEnvironmentSafe() then
-            warn("[Snowfall] Skipping Da Hood hooks - environment unsafe")
             return
         end
-        warn("[Snowfall] Da Hood detected - using minimal hooks only")
         pcall(function()
             task.wait(math.random(100, 300) / 100)
             DaHoodOriginalNameCall = hookmetamethod(game, "__namecall", newcclosure(function(Object, ...)
                 local Method = getnamecallmethod()
                 if not checkcaller() and Method == "Kick" then
                     if Object == Players.LocalPlayer or Object == LocalPlayer then
-                        warn("[Snowfall] Blocked kick attempt")
                         return wait(9e9)
                     end
                 end
                 return DaHoodOriginalNameCall(Object, ...)
             end))
-            warn("[Snowfall] Kick protection enabled")
         end)
     end)
 end
@@ -498,8 +495,6 @@ local function GetCharacterBounds(char)
     return topY, botY
 end
 if IS_RIVALS then
-    warn("[Snowfall] Rivals detected - hooks DISABLED to bypass detector")
-    warn("[Snowfall] Use Aimlock feature instead - works without hooks")
 end
 Connections[#Connections + 1] = Players.PlayerAdded:Connect(function()   _playerListLastRefresh = 0 end)
 Connections[#Connections + 1] = Players.PlayerRemoving:Connect(function(plr)
@@ -534,7 +529,6 @@ local function ResetMovementDefaults()
     end)
 end
 local function Cleanup()
-    warn("[Snowfall] Starting cleanup process...")
     InternalRunning         = false
     HookKilled              = true
     getgenv().ScriptRunning = false
@@ -588,7 +582,6 @@ local function Cleanup()
     end)
     pcall(function()
         if _metaTable and _metaOldIndex then
-            warn("[Snowfall] No metamethod hooks to clean up")
         end
     end)
     pcall(function()
@@ -660,7 +653,6 @@ local function Cleanup()
             end
         end
     end)
-    warn("[Snowfall] All settings reset to default, script completely terminated and destroyed")
     pcall(function()
         script:Destroy()
     end)
@@ -961,6 +953,8 @@ Connections[#Connections + 1] = RunService.Heartbeat:Connect(function()
 end)
 
 local lastCameraCheck = 0
+local lastAntiStompCheck = 0
+local antiStompCooldown = false
 Connections[#Connections + 1] = RunService.Heartbeat:Connect(function()
     if not InternalRunning then return end
     local now = tick()
@@ -1123,7 +1117,6 @@ function SemiUDSilentAim:Uninstall()
     self.OriginalIndex = nil
     _metaTable = nil
     _metaOldIndex = nil
-    warn("[Snowfall] Semi-UD Silent Aim uninstalled")
 end
 local FullUDSilentAim = {
     Enabled = false,
@@ -1311,7 +1304,6 @@ end
 function FullUDSilentAim:Enable()
     if self.Enabled then return end
     self.Enabled = true
-    warn("[Snowfall] Full-UD Silent Aim ENABLED (Elite prediction)")
     local shootConnection = UIS.InputBegan:Connect(function(input, gp)
         if gp then return end
         if not self.Enabled then return end
@@ -1336,7 +1328,6 @@ function FullUDSilentAim:Disable()
         pcall(function() conn:Disconnect() end)
     end
     self.Connections = {}
-    warn("[Snowfall] Full-UD Silent Aim DISABLED")
 end
 local SilentAimHooks = {
     Installed = false,
@@ -1371,9 +1362,6 @@ function SilentAimHooks:Uninstall()
     self.Installed = false
     self.CurrentMethod = "none"
 end
-warn("[Snowfall] Dual Silent Aim system loaded")
-warn("[Snowfall] Semi-UD: Hook-based (accurate, smooth)")
-warn("[Snowfall] Full-UD: Camera flicker (100% undetectable)")
 Connections[#Connections + 1] = RunService.Heartbeat:Connect(function()
     if not InternalRunning or not ENABLE_TRIGGER_BOT then return end
     local now = tick()
@@ -1653,17 +1641,24 @@ Connections[#Connections + 1] = RunService.RenderStepped:Connect(function(dt)
             end
         end
     end
-    if ENABLE_ANTI_STOMP then
-        pcall(function()
-            local char = LocalPlayer.Character
-            if char then
-                local hum = char:FindFirstChildOfClass("Humanoid")
-                if hum and hum.Health > 0 and hum.Health <= ANTI_STOMP_HEALTH then
-                    char:BreakJoints()
-                    warn("[Snowfall] Anti-Stomp triggered at " .. hum.Health .. " HP")
-                end
+    if ENABLE_ANTI_STOMP and not antiStompCooldown then
+        local char = LocalPlayer.Character
+        if char and char.Parent then
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum and hum.Parent and hum.Health > 0 and hum.Health <= ANTI_STOMP_HEALTH then
+                antiStompCooldown = true
+                hum.Health = 0
+                char:BreakJoints()
+                task.spawn(function()
+                    pcall(function() hum:Destroy() end)
+                    pcall(function() char:Destroy() end)
+                    pcall(function() LocalPlayer:LoadCharacter() end)
+                end)
+                task.delay(3, function()
+                    antiStompCooldown = false
+                end)
             end
-        end)
+        end
     end
     if Tracer then
         if TRACER_ENABLED and SilentAimEnabled and LockedTarget and LockedTarget.Parent then
@@ -2151,6 +2146,9 @@ if EQUIP_KORBLOX or EQUIP_HEADLESS or EQUIP_SKOTN then
         task.wait(0.5); ApplyCosmetics()
     end)
 end
+Connections[#Connections + 1] = LocalPlayer.CharacterAdded:Connect(function()
+    antiStompCooldown = false
+end)
 local Window = Library:CreateWindow({
     Title = "snowfall.cc v1.0",
     Center = true,
@@ -2949,7 +2947,6 @@ MiscRight:AddButton({
 MiscRight:AddButton({
     Text = "Kill Switch",
     Func = function()
-        warn("[Snowfall] Kill Switch activated - resetting everything to default...")
         SilentAimEnabled   = false
         SILENT_AIM_ENABLED = false
         LockedTarget       = nil
@@ -3166,7 +3163,6 @@ end)
 local TerminateConnection = UIS.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == cachedTerminateKey then
-        warn("[Snowfall] F3 pressed - resetting everything to default and terminating")
         SilentAimEnabled   = false
         SILENT_AIM_ENABLED = false
         LockedTarget       = nil
@@ -3209,7 +3205,6 @@ local TerminateConnection = UIS.InputBegan:Connect(function(input, gp)
         if TerminateConnection then
             TerminateConnection:Disconnect()
         end
-        warn("[Snowfall] Everything reset to default and script fully terminated")
     end
 end)
 Connections[#Connections + 1] = TerminateConnection
