@@ -1,3 +1,4 @@
+_G.Loaded = false
 local repo = "https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/"
 local Library      = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
@@ -3213,3 +3214,4 @@ local TerminateConnection = UIS.InputBegan:Connect(function(input, gp)
     end
 end)
 Connections[#Connections + 1] = TerminateConnection
+_G.Loaded = true
