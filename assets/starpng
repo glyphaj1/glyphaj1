@@ -3169,6 +3169,7 @@ end)
 local TerminateConnection = UIS.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == cachedTerminateKey then
+        _G.Loaded = false
         SilentAimEnabled   = false
         SILENT_AIM_ENABLED = false
         LockedTarget       = nil
@@ -3187,7 +3188,6 @@ local TerminateConnection = UIS.InputBegan:Connect(function(input, gp)
         ENABLE_CHAMS = false
         ENABLE_LOCAL_PLAYER_ESP = false
         ENABLE_AIM_VIEW = false
-        _G.Loaded = false -- not here before, guten abend
         for _, plr in ipairs(Players:GetPlayers()) do
             RemoveChamsFromPlayer(plr)
         end
