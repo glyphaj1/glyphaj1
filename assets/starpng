@@ -2,7 +2,7 @@
 --      Snowfall . cc UI     
 --  ]
 
-
+print ("neu")
 local repo = "https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/"
 local Library      = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
@@ -78,7 +78,7 @@ local AIM_VIEW_DANGER_COLOR    = config.AIM_VIEW_DANGER_COLOR    or Color3.fromR
 local AIM_VIEW_SAFE_COLOR      = config.AIM_VIEW_SAFE_COLOR      or Color3.fromRGB(0, 255, 0)
 local AIM_VIEW_LENGTH          = config.AIM_VIEW_LENGTH          or 10
 local AIM_VIEW_THICKNESS       = config.AIM_VIEW_THICKNESS       or 1
-local ESP_UPDATE_INTERVAL      = config.ESP_UPDATE_INTERVAL      or 0.001
+local ESP_UPDATE_INTERVAL      = config.ESP_UPDATE_INTERVAL      or 0.05
 local ENABLE_SPINBOT           = cfgOr(config.ENABLE_SPINBOT,           false)
 local SPINBOT_KEY              = config.SPINBOT_KEY              or "F8"
 local SPINBOT_SPEED            = config.SPINBOT_SPEED            or 100
@@ -172,7 +172,7 @@ local CFrame_Angles  = CFrame.Angles
 local Color3_fromRGB = Color3.fromRGB
 local rainbowHue = 0
 local function GetRainbowColor()
-    rainbowHue = (rainbowHue + 0.005) % 1
+    rainbowHue = (rainbowHue + 0.01) % 1
     local r = math_floor(math_sin(rainbowHue * math_pi * 2) * 127 + 128)
     local g = math_floor(math_sin((rainbowHue + 0.33) * math_pi * 2) * 127 + 128)
     local b = math_floor(math_sin((rainbowHue + 0.66) * math_pi * 2) * 127 + 128)
@@ -377,7 +377,7 @@ local function HasForceField(character)
 end
 local _playerListCache       = {}
 local _playerListLastRefresh = 0
-local PLAYER_LIST_TTL        = 0.5
+local PLAYER_LIST_TTL        = 1.0
 local function GetCachedPlayers()
     local now = tick()
     if now - _playerListLastRefresh >= PLAYER_LIST_TTL then
@@ -944,7 +944,7 @@ local _espCreationTick = 0
 Connections[#Connections + 1] = RunService.Heartbeat:Connect(function()
     if not InternalRunning then return end
     local now2 = tick()
-    if now2 - _espCreationTick < 2 then return end
+    if now2 - _espCreationTick < 5 then return end
     _espCreationTick = now2
     if not (ENABLE_ESP or ENABLE_2D_BOX_ESP or ENABLE_SKELETON_ESP) then return end
     for _, plr in ipairs(Players:GetPlayers()) do
@@ -1528,6 +1528,8 @@ Connections[#Connections + 1] = RunService.RenderStepped:Connect(function(dt)
             if cfg.TRIGGER_SHOOT_DELAY   ~= nil then TRIGGER_SHOOT_DELAY   = cfg.TRIGGER_SHOOT_DELAY   end
             if cfg.ENABLE_SPINBOT        ~= nil then ENABLE_SPINBOT        = cfg.ENABLE_SPINBOT        end
             if cfg.SPINBOT_SPEED         ~= nil then SPINBOT_SPEED         = cfg.SPINBOT_SPEED         end
+            if cfg.ENABLE_ANTI_STOMP     ~= nil then ENABLE_ANTI_STOMP     = cfg.ENABLE_ANTI_STOMP     end
+            if cfg.ANTI_STOMP_HEALTH     ~= nil then ANTI_STOMP_HEALTH     = cfg.ANTI_STOMP_HEALTH     end
             if cfg.ESP_BOX_COLOR         ~= nil then ESP_BOX_COLOR         = cfg.ESP_BOX_COLOR         end
             if cfg.ESP_NAME_COLOR        ~= nil then ESP_NAME_COLOR        = cfg.ESP_NAME_COLOR        end
             if cfg.ESP_DIST_COLOR        ~= nil then ESP_DIST_COLOR        = cfg.ESP_DIST_COLOR        end
@@ -1651,6 +1653,18 @@ Connections[#Connections + 1] = RunService.RenderStepped:Connect(function(dt)
             end
         end
     end
+    if ENABLE_ANTI_STOMP then
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum and hum.Health > 0 and hum.Health <= ANTI_STOMP_HEALTH then
+                    char:BreakJoints()
+                    warn("[Snowfall] Anti-Stomp triggered at " .. hum.Health .. " HP")
+                end
+            end
+        end)
+    end
     if Tracer then
         if TRACER_ENABLED and SilentAimEnabled and LockedTarget and LockedTarget.Parent then
             pcall(function()
@@ -1742,7 +1756,7 @@ end)
 
 task.spawn(function()
     while InternalRunning do
-        task.wait(0.5)
+        task.wait(2.0)
         pcall(function()
             if not FullUDSilentAim.IsFlickering then
                 local char = LocalPlayer.Character
@@ -1866,6 +1880,10 @@ Connections[#Connections + 1] = RunService.Heartbeat:Connect(function()
     local now = tick()
     if now - lastESPUpdate < ESP_UPDATE_INTERVAL then return end
     lastESPUpdate = now
+    
+    if not (ENABLE_ESP or ENABLE_2D_BOX_ESP or ENABLE_SKELETON_ESP or ENABLE_CHAMS or ENABLE_AIM_VIEW) then
+        return
+    end
     _espLocalChar = LocalPlayer.Character
     _espLocalHRP  = _espLocalChar and _espLocalChar:FindFirstChild("HumanoidRootPart")
     local localHRP = _espLocalHRP
@@ -2517,6 +2535,7 @@ ESPRight:AddSlider("ESPInterval", {
     Callback = function(v) ESP_UPDATE_INTERVAL = v; SetCfg("ESP_UPDATE_INTERVAL", v) end,
 })
 local HvHLeft = Tabs.HvH:AddLeftGroupbox("HvH Features")
+local HvHRight = Tabs.HvH:AddRightGroupbox("Da Hood HvH")
 HvHLeft:AddToggle("SpinbotToggle", {
     Text = "Spinbot",
     Default = ENABLE_SPINBOT,
@@ -2527,6 +2546,19 @@ HvHLeft:AddSlider("SpinbotSpeed", {
     Default = SPINBOT_SPEED,
     Min = 1, Max = 500, Rounding = 0,
     Callback = function(v) SPINBOT_SPEED = v; SetCfg("SPINBOT_SPEED", v) end,
+})
+HvHRight:AddToggle("AntiStompToggle", {
+    Text = "Anti Stomp",
+    Default = ENABLE_ANTI_STOMP,
+    Tooltip = "Automatically resets your character when health reaches threshold. Prevents enemies from stomping you.",
+    Callback = function(v) ENABLE_ANTI_STOMP = v; SetCfg("ENABLE_ANTI_STOMP", v) end,
+})
+HvHRight:AddSlider("AntiStompHealth", {
+    Text = "Health Threshold",
+    Default = ANTI_STOMP_HEALTH,
+    Min = 1, Max = 20, Rounding = 0,
+    Tooltip = "Character will reset when health drops to this value",
+    Callback = function(v) ANTI_STOMP_HEALTH = v; SetCfg("ANTI_STOMP_HEALTH", v) end,
 })
 local MovLeft = Tabs.Movement:AddLeftGroupbox("Speed & Jump")
 MovLeft:AddToggle("SpeedToggle", {
@@ -3019,6 +3051,8 @@ local function SaveAllSettings()
     cfg.SPINBOT_KEY = SPINBOT_KEY
     cfg.SPINBOT_SPEED = SPINBOT_SPEED
     cfg.HVH_KEY = HVH_KEY
+    cfg.ENABLE_ANTI_STOMP = ENABLE_ANTI_STOMP
+    cfg.ANTI_STOMP_HEALTH = ANTI_STOMP_HEALTH
     cfg.USE_VELOCITY_SPEED = USE_VELOCITY_SPEED
     cfg.VELOCITY_SPEED_VALUE = VELOCITY_SPEED_VALUE
     cfg.WALKSPEED_VALUE = WALKSPEED_VALUE
