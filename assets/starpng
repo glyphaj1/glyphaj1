@@ -1,4 +1,3 @@
-warn ("asasasas")
 local repo = "https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/"
 local Library      = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
@@ -1722,24 +1721,25 @@ Connections[#Connections + 1] = RunService.RenderStepped:Connect(function(dt)
                 end
             end
             if SpeedEnabled then
-            if USE_VELOCITY_SPEED then
-                local hrp = char:FindFirstChild("HumanoidRootPart")
-                if hrp and hum.MoveDirection.Magnitude > 0 then
-                    local moveDir = hum.MoveDirection
-                    hrp.AssemblyLinearVelocity = Vector3_new(
-                        moveDir.X * VELOCITY_SPEED_VALUE,
-                        hrp.AssemblyLinearVelocity.Y,
-                        moveDir.Z * VELOCITY_SPEED_VALUE
-                    )
+                if USE_VELOCITY_SPEED then
+                    local hrp = char:FindFirstChild("HumanoidRootPart")
+                    if hrp and hum.MoveDirection.Magnitude > 0 then
+                        local moveDir = hum.MoveDirection
+                        hrp.AssemblyLinearVelocity = Vector3_new(
+                            moveDir.X * VELOCITY_SPEED_VALUE,
+                            hrp.AssemblyLinearVelocity.Y,
+                            moveDir.Z * VELOCITY_SPEED_VALUE
+                        )
+                    end
+                else
+                    if hum.WalkSpeed ~= WALKSPEED_VALUE then 
+                        hum.WalkSpeed = WALKSPEED_VALUE 
+                    end
                 end
             else
-                if hum.WalkSpeed ~= WALKSPEED_VALUE then 
-                    hum.WalkSpeed = WALKSPEED_VALUE 
+                if hum.WalkSpeed ~= DEFAULT_SPEED then 
+                    hum.WalkSpeed = DEFAULT_SPEED 
                 end
-            end
-        else
-            if hum.WalkSpeed ~= DEFAULT_SPEED then 
-                hum.WalkSpeed = DEFAULT_SPEED 
             end
         end
     end
