@@ -1,5 +1,4 @@
 _G.Loaded = false
-print ("loaded false")
 local repo = "https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/"
 local Library      = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
@@ -3188,6 +3187,7 @@ local TerminateConnection = UIS.InputBegan:Connect(function(input, gp)
         ENABLE_CHAMS = false
         ENABLE_LOCAL_PLAYER_ESP = false
         ENABLE_AIM_VIEW = false
+        _G.Loaded = false -- not here before, guten abend
         for _, plr in ipairs(Players:GetPlayers()) do
             RemoveChamsFromPlayer(plr)
         end
@@ -3216,4 +3216,3 @@ local TerminateConnection = UIS.InputBegan:Connect(function(input, gp)
 end)
 Connections[#Connections + 1] = TerminateConnection
 _G.Loaded = true
-print ("loaded true")
