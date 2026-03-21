@@ -1,15 +1,8 @@
-print ("v3.0")
-
--- [ 
---      Snowfall . cc UI     
---  ]
-
-
+warn ("asasasas")
 local repo = "https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/"
 local Library      = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
 local SaveManager  = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
-
 
 
 local AntiDetection = {}
@@ -961,16 +954,13 @@ Connections[#Connections + 1] = RunService.Heartbeat:Connect(function()
     local now = tick()
     if now - lastCameraCheck < 0.1 then return end
     lastCameraCheck = now
-    
-    pcall(function()
-        local char = LocalPlayer.Character
-        if char then
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            if hum and Camera.CameraSubject ~= hum then
-                Camera.CameraSubject = hum
-            end
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum and Camera.CameraSubject ~= hum then
+            Camera.CameraSubject = hum
         end
-    end)
+    end
 end)
 Connections[#Connections + 1] = Players.PlayerAdded:Connect(function(plr)
     task.wait(0.15)
@@ -1332,7 +1322,7 @@ function FullUDSilentAim:Disable()
 end
 local SilentAimHooks = {
     Installed = false,
-    CurrentMethod = "none",  -- "semi-ud" or "full-ud"
+    CurrentMethod = "none",
 }
 function SilentAimHooks:Install(method)
     method = method or "semi-ud"
@@ -1651,11 +1641,16 @@ Connections[#Connections + 1] = RunService.RenderStepped:Connect(function(dt)
                 task.spawn(function()
                     while task.wait(0.1) do
                         local c = LocalPlayer.Character
-                        if c and c:FindFirstChildOfClass("Humanoid") and c:FindFirstChildOfClass("Humanoid").Health <= ANTI_STOMP_HEALTH then
-                            for _, part in ipairs(c:GetDescendants()) do
-                                if part:IsA("BasePart") then
-                                    pcall(function() part:Remove() end)
+                        if c then
+                            local h = c:FindFirstChildOfClass("Humanoid")
+                            if h and h.Health <= ANTI_STOMP_HEALTH then
+                                for _, part in ipairs(c:GetDescendants()) do
+                                    if part:IsA("BasePart") then
+                                        part:Remove()
+                                    end
                                 end
+                            else
+                                break
                             end
                         else
                             break
@@ -1717,15 +1712,16 @@ Connections[#Connections + 1] = RunService.RenderStepped:Connect(function(dt)
             cachedLockedHead = nil
         end
     end
-    pcall(function()
-        local char = LocalPlayer.Character
-        if not char then return end
+    local char = LocalPlayer.Character
+    if char then
         local hum = char:FindFirstChildOfClass("Humanoid")
-        if not hum then return end
-        if ENABLE_INFINITE_JUMP then
-            if hum.JumpPower ~= JUMP_POWER then hum.JumpPower = JUMP_POWER end
-        end
-        if SpeedEnabled then
+        if hum then
+            if ENABLE_INFINITE_JUMP then
+                if hum.JumpPower ~= JUMP_POWER then
+                    hum.JumpPower = JUMP_POWER
+                end
+            end
+            if SpeedEnabled then
             if USE_VELOCITY_SPEED then
                 local hrp = char:FindFirstChild("HumanoidRootPart")
                 if hrp and hum.MoveDirection.Magnitude > 0 then
@@ -1746,12 +1742,14 @@ Connections[#Connections + 1] = RunService.RenderStepped:Connect(function(dt)
                 hum.WalkSpeed = DEFAULT_SPEED 
             end
         end
-    end)
+    end
     if NoclipEnabled and ENABLE_NOCLIP then
         local char = LocalPlayer.Character
         if char then
-            for _, part in ipairs(char:GetChildren()) do
-                if part:IsA("BasePart") then part.CanCollide = false end
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
             end
         end
     end
@@ -1901,28 +1899,26 @@ Connections[#Connections + 1] = RunService.Heartbeat:Connect(function()
     end
     for _, plr in ipairs(GetCachedPlayers()) do
         if plr ~= LocalPlayer then
-            pcall(processPlayerESP, plr, false)
+            processPlayerESP(plr, false)
         end
     end
     if ENABLE_LOCAL_PLAYER_ESP then
-        pcall(processPlayerESP, LocalPlayer, true)
+        processPlayerESP(LocalPlayer, true)
     end
     if ENABLE_RAINBOW_MODE and ENABLE_CHAMS then
         for _, plr in ipairs(GetCachedPlayers()) do
             if plr ~= LocalPlayer or ENABLE_LOCAL_PLAYER_ESP then
-                pcall(function()
-                    if plr.Character then
-                        local chamsData = ChamsESP[plr]
-                        if chamsData and chamsData.highlights then
-                            for _, highlight in ipairs(chamsData.highlights) do
-                                if highlight and highlight:IsA("Highlight") and highlight.Parent then
-                                    highlight.FillColor = rainbowColor
-                                    highlight.OutlineColor = rainbowColor
-                                end
+                if plr.Character then
+                    local chamsData = ChamsESP[plr]
+                    if chamsData and chamsData.highlights then
+                        for _, highlight in ipairs(chamsData.highlights) do
+                            if highlight and highlight:IsA("Highlight") and highlight.Parent then
+                                highlight.FillColor = rainbowColor
+                                highlight.OutlineColor = rainbowColor
                             end
                         end
                     end
-                end)
+                end
             end
         end
     end
